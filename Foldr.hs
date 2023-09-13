@@ -52,8 +52,8 @@ and test it on some inputs
 
 testLength :: Test
 testLength =
-  "length"
-    ~: TestList
+  "length" ~:
+    TestList
       [ length "abcd" ~?= 4,
         length "" ~?= 0
       ]
@@ -113,12 +113,12 @@ Now implement using foldr
 -- >>> all (>0) ([1 .. 20] :: [Int])
 -- True
 all :: (a -> Bool) -> [a] -> Bool
-all p = undefined
+all p = foldr (\x y -> p x && y) True
 
 testAll :: Test
 testAll =
-  "all"
-    ~: TestList
+  "all" ~:
+    TestList
       [ all (> 10) ([1 .. 20] :: [Int]) ~?= False,
         all (> 0) ([1 .. 20] :: [Int]) ~?= True
       ]
@@ -151,7 +151,13 @@ Now implement using foldr
 -- >>> last ""
 -- Nothing
 last :: [a] -> Maybe a
-last = undefined
+last =
+  foldr
+    ( \x y -> case y of
+        Nothing -> Just x
+        Just y -> Just y
+    )
+    Nothing
 
 {-
 >
@@ -159,8 +165,8 @@ last = undefined
 
 testLast :: Test
 testLast =
-  "last"
-    ~: TestList
+  "last" ~:
+    TestList
       [ last "abcd" ~?= Just 'd',
         last "" ~?= Nothing
       ]
@@ -177,12 +183,12 @@ of the first list for which the input function returns `True`.
 -}
 
 filter :: (a -> Bool) -> [a] -> [a]
-filter p = undefined
+filter p = foldr (\x y -> if p x then x : y else y) []
 
 testFilter :: Test
 testFilter =
-  "filter"
-    ~: TestList
+  "filter" ~:
+    TestList
       [ filter (> 10) [1 .. 20] ~?= ([11 .. 20] :: [Int]),
         filter (\l -> sum l <= 42) [[10, 20], [50, 50], [1 .. 5]] ~?= ([[10, 20], [1 .. 5]] :: [[Int]])
       ]
@@ -209,12 +215,12 @@ Now rewrite this function using 'foldr'
 -}
 
 reverse :: [a] -> [a]
-reverse l = undefined
+reverse = foldr (\x xs -> xs ++ [x]) []
 
 testReverse :: Test
 testReverse =
-  "reverse"
-    ~: TestList
+  "reverse" ~:
+    TestList
       [ reverse "abcd" ~?= "dcba",
         reverse "" ~?= ""
       ]
@@ -248,12 +254,18 @@ Now rewrite using 'foldr'
 -}
 
 intersperse :: a -> [a] -> [a]
-intersperse = undefined
+intersperse a =
+  foldr
+    ( \x xs -> case xs of
+        y : ys -> x : a : xs
+        [] -> [x]
+    )
+    []
 
 testIntersperse :: Test
 testIntersperse =
-  "intersperse"
-    ~: TestList
+  "intersperse" ~:
+    TestList
       [ "intersperse0" ~: intersperse ',' "abcde" ~=? "a,b,c,d,e",
         "intersperse1" ~: intersperse ',' "" ~=? ""
       ]
@@ -288,7 +300,7 @@ But, you can also define `foldl` in terms of `foldr`. Give it a try.
 -}
 
 foldl :: (b -> a -> b) -> b -> [a] -> b
-foldl f z xs = undefined
+foldl f z xs = foldr (\b g x -> g (f x b)) id xs z
 
 testFoldl :: Test
 testFoldl = foldl (++) "x" ["1", "2", "3"] ~=? "x123"
